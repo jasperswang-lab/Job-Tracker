@@ -4,7 +4,7 @@ import type { Prospect } from "@shared/schema";
 import { STATUSES } from "@shared/schema";
 import { ProspectCard } from "@/components/prospect-card";
 import { AddProspectForm } from "@/components/add-prospect-form";
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, Plus, LayoutDashboard, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Dashboard } from "./dashboard";
 
 const INTEREST_FILTER_OPTIONS = [
   { value: "All", label: "All" },
@@ -117,8 +118,11 @@ function KanbanColumn({
   );
 }
 
+type ViewMode = "board" | "dashboard";
+
 export default function Home() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState<ViewMode>("board");
 
   const { data: prospects, isLoading } = useQuery<Prospect[]>({
     queryKey: ["/api/prospects"],
@@ -152,35 +156,63 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" data-testid="button-add-prospect">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  Add Prospect
+            <div className="flex items-center gap-2">
+              <div className="flex items-center border rounded-lg p-0.5" data-testid="view-switcher">
+                <Button
+                  size="sm"
+                  variant={view === "board" ? "default" : "ghost"}
+                  className="h-7 px-2.5 text-xs"
+                  onClick={() => setView("board")}
+                  data-testid="button-view-board"
+                >
+                  <Columns3 className="w-3.5 h-3.5 mr-1.5" />
+                  Board
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Add New Prospect</DialogTitle>
-                </DialogHeader>
-                <AddProspectForm onSuccess={() => setDialogOpen(false)} />
-              </DialogContent>
-            </Dialog>
+                <Button
+                  size="sm"
+                  variant={view === "dashboard" ? "default" : "ghost"}
+                  className="h-7 px-2.5 text-xs"
+                  onClick={() => setView("dashboard")}
+                  data-testid="button-view-dashboard"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 mr-1.5" />
+                  Dashboard
+                </Button>
+              </div>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" data-testid="button-add-prospect">
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Add Prospect
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Add New Prospect</DialogTitle>
+                  </DialogHeader>
+                  <AddProspectForm onSuccess={() => setDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="flex gap-3 p-4 h-full min-w-max">
-          {STATUSES.map((status) => (
-            <KanbanColumn
-              key={status}
-              status={status}
-              prospects={groupedByStatus[status] || []}
-              isLoading={isLoading}
-            />
-          ))}
-        </div>
+        {view === "board" ? (
+          <div className="flex gap-3 p-4 h-full min-w-max">
+            {STATUSES.map((status) => (
+              <KanbanColumn
+                key={status}
+                status={status}
+                prospects={groupedByStatus[status] || []}
+                isLoading={isLoading}
+              />
+            ))}
+          </div>
+        ) : (
+          <Dashboard prospects={prospects ?? []} isLoading={isLoading} />
+        )}
       </main>
     </div>
   );

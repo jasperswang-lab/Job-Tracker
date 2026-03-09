@@ -1,4 +1,5 @@
-import { validateProspect } from "../prospect-helpers";
+import { validateProspect, computeDashboardStats } from "../prospect-helpers";
+import { STATUSES, INTEREST_LEVELS } from "../../shared/schema";
 
 describe("prospect creation validation", () => {
   test("rejects a blank company name", () => {
@@ -87,5 +88,60 @@ describe("salary field validation", () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain("Target salary must be a string");
+  });
+});
+
+describe("dashboard stats computation", () => {
+  const mockProspects = [
+    { status: "Bookmarked", interestLevel: "High" },
+    { status: "Bookmarked", interestLevel: "Medium" },
+    { status: "Applied", interestLevel: "High" },
+    { status: "Interviewing", interestLevel: "Low" },
+    { status: "Offer", interestLevel: "High" },
+  ];
+
+  test("computes correct total count", () => {
+    const stats = computeDashboardStats(mockProspects, STATUSES, INTEREST_LEVELS);
+    expect(stats.total).toBe(5);
+  });
+
+  test("computes correct status breakdown", () => {
+    const stats = computeDashboardStats(mockProspects, STATUSES, INTEREST_LEVELS);
+    expect(stats.byStatus["Bookmarked"]).toBe(2);
+    expect(stats.byStatus["Applied"]).toBe(1);
+    expect(stats.byStatus["Phone Screen"]).toBe(0);
+    expect(stats.byStatus["Interviewing"]).toBe(1);
+    expect(stats.byStatus["Offer"]).toBe(1);
+    expect(stats.byStatus["Rejected"]).toBe(0);
+    expect(stats.byStatus["Withdrawn"]).toBe(0);
+  });
+
+  test("computes correct interest level breakdown", () => {
+    const stats = computeDashboardStats(mockProspects, STATUSES, INTEREST_LEVELS);
+    expect(stats.byInterestLevel["High"]).toBe(3);
+    expect(stats.byInterestLevel["Medium"]).toBe(1);
+    expect(stats.byInterestLevel["Low"]).toBe(1);
+  });
+
+  test("returns all zeroes for an empty list", () => {
+    const stats = computeDashboardStats([], STATUSES, INTEREST_LEVELS);
+    expect(stats.total).toBe(0);
+    for (const s of STATUSES) {
+      expect(stats.byStatus[s]).toBe(0);
+    }
+    for (const l of INTEREST_LEVELS) {
+      expect(stats.byInterestLevel[l]).toBe(0);
+    }
+  });
+
+  test("initialises every status key even when no prospects match", () => {
+    const stats = computeDashboardStats(
+      [{ status: "Bookmarked", interestLevel: "High" }],
+      STATUSES,
+      INTEREST_LEVELS,
+    );
+    for (const s of STATUSES) {
+      expect(stats.byStatus).toHaveProperty(s);
+    }
   });
 });

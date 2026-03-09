@@ -20,7 +20,8 @@ server/
   prospect-helpers.ts         - Pure helper functions (getNextStatus, validateProspect, isTerminalStatus)
 client/src/
   App.tsx                     - Root component, routing, providers
-  pages/home.tsx              - Kanban board with 7 status columns
+  pages/home.tsx              - Kanban board with 7 status columns + view switcher
+  pages/dashboard.tsx         - Dashboard view with total, status, and interest breakdowns
   components/
     prospect-card.tsx         - Card component with edit/delete actions
     add-prospect-form.tsx     - Dialog form for creating prospects

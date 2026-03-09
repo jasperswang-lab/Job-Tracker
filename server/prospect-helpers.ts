@@ -51,3 +51,40 @@ export function validateProspect(data: Record<string, unknown>): { valid: boolea
 export function isTerminalStatus(status: string): boolean {
   return status === "Rejected" || status === "Withdrawn" || status === "Offer";
 }
+
+export interface DashboardStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byInterestLevel: Record<string, number>;
+}
+
+export function computeDashboardStats(
+  prospects: { status: string; interestLevel: string }[],
+  statuses: readonly string[],
+  interestLevels: readonly string[],
+): DashboardStats {
+  const byStatus: Record<string, number> = {};
+  for (const s of statuses) {
+    byStatus[s] = 0;
+  }
+
+  const byInterestLevel: Record<string, number> = {};
+  for (const l of interestLevels) {
+    byInterestLevel[l] = 0;
+  }
+
+  for (const p of prospects) {
+    if (p.status in byStatus) {
+      byStatus[p.status]++;
+    }
+    if (p.interestLevel in byInterestLevel) {
+      byInterestLevel[p.interestLevel]++;
+    }
+  }
+
+  return {
+    total: prospects.length,
+    byStatus,
+    byInterestLevel,
+  };
+}
